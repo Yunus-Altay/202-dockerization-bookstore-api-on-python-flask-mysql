@@ -72,5 +72,5 @@ resource "aws_security_group" "docker_instance_sec_gr" {
 }
 
 output "myec2-public-ip" {
-  value = "http://${aws_instance.docker_instance.public_ip}"
+  value = "http://${aws_instance.docker_instance.public_dns}"
 }
