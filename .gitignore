@@ -18,4 +18,4 @@ crash.log
 *.tfvars
 
 # Omit the terraform config file for now
-*.tf
+# *.tf
