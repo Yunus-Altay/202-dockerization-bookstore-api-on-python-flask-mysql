@@ -11,6 +11,6 @@ chmod +x /usr/local/bin/docker-compose
 dnf install git -y
 cd /home/ec2-user && git clone https://github.com/Yunus-Altay/202-dockerization-bookstore-api-on-python-flask-mysql.git
 cd /home/ec2-user/202-dockerization-bookstore-api-on-python-flask-mysql
-# echo ${db_password} > db_password.txt
-# echo ${db_root_password} > db_root_password.txt
+echo ${db_password} > db_password.txt
+echo ${db_root_password} > db_root_password.txt
 docker-compose up -d

@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  Bookstore Web API Application aims to create a bookstore web 
+  service using Docker. The application code is to be deployed 
+  as a RESTful web service with Flask using Dockerfile and Docker 
+  Compose on AWS Elastic Compute Cloud (EC2) Instance using 
+  Cloudformation on AWS.
+
+Parameters:
+  VPC:
+    Description: "VPC"
+    Type: AWS::EC2::VPC::Id
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  KeyName:
+    Description: The key pair to connect the docker instance using SSH
+    Type: 'AWS::EC2::KeyPair::KeyName' 
+  DBPassword:
+    Type: String
+    Description: User password of the MySQL database 
+    Default: "simaox1234"
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBRootPassword:
+    Type: String
+    Description: Root password of the MySQL database
+    Default: "admin1234"
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+
+
+Resources:
+  DocInstanceSecGr:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Docker instance security group with SSH, HTTP and HTTPS ports"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+  
+  DockerInstance: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref LatestAmiId
+      KeyName: !Ref KeyName
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref DocInstanceSecGr
+      Tags:
+        - Key: Name
+          Value: Web Server of Bookstore
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          hostnamectl set-hostname docker_instance
+          yum update -y
+          yum install docker -y
+          systemctl start docker
+          systemctl enable docker
+          usermod -a -G docker ec2-user
+          # install docker-compose
+          curl -SL https://github.com/docker/compose/releases/download/v2.17.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          yum install git -y
+          cd /home/ec2-user && git clone https://github.com/Yunus-Altay/202-dockerization-bookstore-api-on-python-flask-mysql.git
+          cd /home/ec2-user/202-dockerization-bookstore-api-on-python-flask-mysql
+          echo ${DBPassword} > db_password.txt
+          echo ${DBRootPassword} > db_root_password.txt
+          docker-compose up -d
+
+Outputs:
+  WebSiteURL:
+    Value: !Sub
+      - http://${PublicAddress}
+      - PublicAddress: !GetAtt DockerInstance.PublicDnsName
+    Description: Bookstore Application URL
+ 
+    
