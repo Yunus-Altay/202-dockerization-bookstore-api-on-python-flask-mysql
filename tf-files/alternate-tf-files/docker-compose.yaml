@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:5.7
+    volumes:
+       - db_data:/var/lib/mysql
+    container_name: mysql_db
+    environment:
+      MYSQL_DATABASE: bookstore_db
+      MYSQL_USER: simaox
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets:
+       - db_password
+       - db_root_password
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+
+  bookstore:
+    build: .
+    container_name: bookstore_app
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+secrets:
+   db_password:
+     file: db_password.txt
+   db_root_password:
+     file: db_root_password.txt
+
+networks:
+  app-network:
+
+volumes:
+    db_data:

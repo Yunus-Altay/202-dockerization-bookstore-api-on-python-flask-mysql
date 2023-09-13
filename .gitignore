@@ -16,3 +16,7 @@ crash.log
 # control as they are data points which are potentially sensitive and subject
 # to change depending on the environment.
 *.tfvars
+
+# Database passwords will be set via userdata
+db_password.txt
+db_root_password.txt
